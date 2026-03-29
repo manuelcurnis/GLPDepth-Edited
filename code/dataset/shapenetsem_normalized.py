@@ -73,7 +73,7 @@ class shapenetsem_normalized(BaseDataset):
 
         pt = Imath.PixelType(Imath.PixelType.FLOAT)
         redstr = exr_file.channel('R', pt)
-        red = np.fromstring(redstr, dtype = np.float32)
+        red = np.frombuffer(redstr, dtype = np.float32)
         red.shape = (size[1], size[0]) # Numpy arrays are (row, col)
 
         return red

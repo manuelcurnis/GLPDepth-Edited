@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+
+# Large data & model files
+code/dataset/output/
+code/models/best_model_nyu.ckpt
+code/models/weights/
+datasets/
+logs/
+
+# Metadata source (large CSV)
+code/dataset/metadata.csv

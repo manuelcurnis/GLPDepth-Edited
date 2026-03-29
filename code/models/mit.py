@@ -13,7 +13,7 @@ from timm.models.registry import register_model
 from timm.models.vision_transformer import _cfg
 #from mmseg.models.builder import BACKBONES
 #from mmseg.utils import get_root_logger
-from mmcv.runner import load_checkpoint
+# mmcv replaced with simple torch loader
 import math
 
 
@@ -286,9 +286,10 @@ class MixVisionTransformer(nn.Module):
 
     def init_weights(self, pretrained=None):
         if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, map_location='cpu',
-                            strict=False, logger=logger)
+            state_dict = torch.load(pretrained, map_location='cpu')
+            if 'state_dict' in state_dict:
+                state_dict = state_dict['state_dict']
+            self.load_state_dict(state_dict, strict=False)
 
     def reset_drop_path(self, drop_path_rate):
         dpr = [x.item() for x in torch.linspace(

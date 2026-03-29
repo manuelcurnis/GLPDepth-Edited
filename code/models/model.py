@@ -1,8 +1,16 @@
 import torch
 import torch.nn as nn
 
-from mmcv.runner import load_checkpoint
 from models.mit import mit_b4
+
+
+def _load_checkpoint(model, ckpt_path, logger=None):
+    """Simple replacement for mmcv.runner.load_checkpoint."""
+    state_dict = torch.load(ckpt_path, map_location='cpu')
+    if 'state_dict' in state_dict:
+        state_dict = state_dict['state_dict']
+    model.load_state_dict(state_dict, strict=False)
+
 
 class GLPDepth(nn.Module):
     def __init__(self, max_depth=10.0, is_train=False):
@@ -13,7 +21,7 @@ class GLPDepth(nn.Module):
         if is_train:
             ckpt_path = './code/models/weights/mit_b4.pth'
             try:
-                load_checkpoint(self.encoder, ckpt_path, logger=None)
+                _load_checkpoint(self.encoder, ckpt_path, logger=None)
             except:
                 import gdown
                 print("Download pre-trained encoder weights...")

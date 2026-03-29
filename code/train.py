@@ -47,7 +47,7 @@ def main():
     # Load checkpoint if provided
     if args.ckpt_dir is not None:
         model = GLPDepth(max_depth=args.max_depth, is_train=False)
-        model_weight = torch.load(args.ckpt_dir)
+        model_weight = torch.load(args.ckpt_dir, map_location='cpu')
         if 'module' in next(iter(model_weight.items()))[0]:
             model_weight = OrderedDict((k[7:], v) for k, v in model_weight.items())
         model.load_state_dict(model_weight)
