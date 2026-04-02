@@ -19,35 +19,46 @@ class amazon(BaseDataset):
         self.scale_size = scale_size
 
         self.is_train = is_train
-        self.data_path = os.path.join(data_path, 'amazon/')
 
-        txt_path = os.path.join(filenames_path, 'amazon')
-        txt_path += '/file_paths_test.txt' # '/file_paths_small.txt' or '/file_paths.txt'
+        # Determine which split directory to use
+        if is_train:
+            split_dir = os.path.join(data_path, 'amazon_data', 'train_data')
+        else:
+            split_dir = os.path.join(data_path, 'amazon_data', 'test_data')
 
-        files_path = './datasets/amazon/test/amazon_test_set.pklz'
-        self.files = self.get_compressed_object(files_path)
+        # Collect all .pklz files from the split directory
+        self.file_paths = sorted([
+            os.path.join(split_dir, f)
+            for f in os.listdir(split_dir)
+            if f.endswith('.pklz')
+        ])
 
-        self.filenames_list = self.readTXT(txt_path)
         phase = 'train' if is_train else 'test'
-        print("Dataset: Shapenet Sem (Normalized)")
-        print("# of %s images: %d" % (phase, len(self.filenames_list)))
+        print("Dataset: Amazon")
+        print("# of %s images: %d" % (phase, len(self.file_paths)))
 
     def __len__(self):
-        return len(self.files)
+        return len(self.file_paths)
 
     def __getitem__(self, idx):
-        img, mask, density, dims, rect, weight = self.files[idx]
-        dimensions = self.dimensions_to_float(dims)
-        image = np.array(img)
+        pklz_path = self.file_paths[idx]
+        record = self.get_compressed_object(pklz_path)
+
+        # Extract data from the record
+        img = record['image_data']       # binary image data
+        dims = record['dimensions']      # dimensions as strings in inches
+
+        # Decode image and resize to match ShapeNetSem format
+        image = self.unpack_amazon_image(img)
         image = self.resize_image(image)
 
-
-        #pklz_path = self.data_path + self.filenames_list[idx]
-        #dimensions, image = self.get_amazon_test_set(pklz_path)
+        # Compute normalization factor from physical dimensions
+        dimensions = self.dimensions_to_float(dims)
         normalization = self.getNormalization(dimensions)
-        #filename = pklz_path.split('/')[-1]
-        #filename = filename.replace('.pklz', '.png')
-        filename = str(idx) + '.png'
+
+        # Build filename from the .pklz filename
+        basename = os.path.basename(pklz_path)
+        filename = basename.replace('.pklz', '.png')
 
         if self.scale_size:
             image = cv2.resize(image, (self.scale_size[0], self.scale_size[1]))
